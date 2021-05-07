@@ -126,10 +126,10 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         metadata = {
             'options' : {
                 'resources' : {
-                    'num_machines' : 4
+                    'num_machines' : 1
                 },
                 'max_wallclock_seconds' : 30*60,
-                'queue_name' : 'pdebug',
+                'queue_name' : 'pbatch',
                 'account' : 'corrctl'
             }
         }
@@ -138,12 +138,13 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         # Setup caged parameters
         builder.cage.code = code
         builder.cage.metadata = metadata
+        builder.cage.metadata['call_link_label'] = 'cage'
         builder.cage.parameters = Dict(dict={
 
             'basis spherical':{
                 'H' : 'library aug-cc-pVDZ',
                 'O' : 'library aug-cc-pVDZ',
-                cage_kind : 'library LANL08+'
+                cage_kind : 'library aug-cc-PVTZ'
             },
 
             'set':{
@@ -165,11 +166,12 @@ class LLNLSpectroscopyWorkChain(WorkChain):
 
         builder.ligand.code = code
         builder.ligand.metadata = metadata
+        builder.ligand.metadata['call_link_label'] = 'ligand'
         builder.ligand.parameters = Dict(dict={
             'basis spherical':{
                 'H' : 'library aug-cc-pVDZ',
                 'O' : 'library aug-cc-pVDZ',
-                cage_kind : 'library LANL08+'
+                cage_kind : 'library aug-cc-pVTZ'
             },
             'set':{
                 'tolguess': 1e-9
@@ -187,12 +189,13 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         # Setup full calculation information
         builder.full.code = code
         builder.full.metadata = metadata
+        builder.full.metadata['call_link_label'] = 'full'
         builder.full.structure = structure
         builder.full.parameters = Dict(dict={
             'basis spherical':{
                 'H' : 'library aug-cc-pVDZ',
                 'O' : 'library aug-cc-pVDZ',
-                cage_kind : 'library LANL08+'
+                cage_kind : 'library aug-cc-pVTZ'
             },
             'set':{
                 'tolguess': 1e-9
@@ -209,6 +212,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         # Setup full calculation with UHF
         builder.uhf.code = code
         builder.uhf.metadata = metadata
+        builder.uhf.metadata['call_link_label'] = 'uhf'
         builder.uhf.structure = structure
         builder.uhf.parameters = Dict(dict={
             'restart' : True,
@@ -223,6 +227,9 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         # DFT parameters
         builder.dft.code = code
         builder.dft.metadata = metadata
+        builder.dft.metadata['call_link_label'] = 'dft'
+        builder.dft.metadata['options']['resources']['num_machines'] = 4
+        builder.dft.metadata['options']['max_wallclock_seconds'] = 60*60
         builder.dft.structure = structure
         builder.dft.parameters = Dict(dict={
             'restart' : True,
@@ -248,6 +255,9 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         # TDDFT parameters
         builder.tddft.code = code
         builder.tddft.metadata = metadata
+        builder.tddft.metadata['call_link_label'] = 'tddft'
+        builder.dft.metadata['options']['resources']['num_machines'] = 4
+        builder.dft.metadata['options']['max_wallclock_seconds'] = 2*60*60
         builder.tddft.structure = structure
         builder.tddft.parameters = Dict(dict={
             'restart' : True,
@@ -297,7 +307,6 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         inputs = AttributeDict(self.exposed_inputs(NwchemCalculation,'cage'))
         parameters = self.inputs.cage.parameters.get_dict()
         inputs.metadata = self.inputs.cage.metadata
-        inputs.metadata.call_link_label = 'cage'
         inputs.code = self.inputs.cage.code
         inputs.parameters = orm.Dict(dict=parameters)
         inputs.structure = self.inputs.cage.structure
@@ -322,7 +331,6 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         inputs.parent_folder = self.ctx.calc_parent_folder
         parameters = self.inputs.ligand.parameters.get_dict()
         inputs.metadata = self.inputs.ligand.metadata
-        inputs.metadata.call_link_label = 'ligand'
         inputs.parameters = orm.Dict(dict=parameters)
         inputs.structure = self.inputs.ligand.structure
 
@@ -346,7 +354,6 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         inputs.parent_folder = self.ctx.calc_parent_folder
         parameters = self.inputs.full.parameters.get_dict()
         inputs.metadata = self.inputs.full.metadata
-        inputs.metadata.call_link_label = 'full'
         inputs.parameters = orm.Dict(dict=parameters)
         inputs.structure = self.inputs.full.structure
 
@@ -370,7 +377,6 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         inputs.parent_folder = self.ctx.calc_parent_folder
         parameters = self.inputs.uhf.parameters.get_dict()
         inputs.metadata = self.inputs.uhf.metadata
-        inputs.metadata.call_link_label = 'uhf'
         inputs.parameters = orm.Dict(dict=parameters)
         inputs.structure = self.inputs.uhf.structure
 
@@ -394,7 +400,6 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         inputs.parent_folder = self.ctx.calc_parent_folder
         parameters = self.inputs.dft.parameters.get_dict()
         inputs.metadata = self.inputs.dft.metadata
-        inputs.metadata.call_link_label = 'dft'
         inputs.parameters = orm.Dict(dict=parameters)
         inputs.structure = self.inputs.dft.structure
 
@@ -418,7 +423,6 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         inputs.parent_folder = self.ctx.calc_parent_folder
         parameters = self.inputs.tddft.parameters.get_dict()
         inputs.metadata = self.inputs.tddft.metadata
-        inputs.metadata.call_link_label = 'tddft'
         inputs.parameters = orm.Dict(dict=parameters)
         inputs.structure = self.inputs.dft.structure
 
