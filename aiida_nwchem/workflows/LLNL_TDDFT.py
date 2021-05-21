@@ -138,6 +138,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         # Setup caged parameters
         builder.cage.code = code
         builder.cage.metadata = metadata.copy()
+        builder.cage.metadata['options']['resources']['num_machines'] = 1
         builder.cage.metadata['call_link_label'] = 'cage'
         builder.cage.parameters = Dict(dict={
 
@@ -256,8 +257,8 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         builder.tddft.code = code
         builder.tddft.metadata = metadata.copy()
         builder.tddft.metadata['call_link_label'] = 'tddft'
-        builder.dft.metadata['options']['resources']['num_machines'] = 4
-        builder.dft.metadata['options']['max_wallclock_seconds'] = 2*60*60
+        builder.tddft.metadata['options']['resources']['num_machines'] = 4
+        builder.tddft.metadata['options']['max_wallclock_seconds'] = 2*60*60
         builder.tddft.structure = structure
         builder.tddft.parameters = Dict(dict={
             'restart' : True,
