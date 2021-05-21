@@ -138,7 +138,6 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         # Setup caged parameters
         builder.cage.code = code
         builder.cage.metadata = metadata.copy()
-        builder.cage.metadata['options']['resources']['num_machines'] = 1
         builder.cage.metadata['call_link_label'] = 'cage'
         builder.cage.parameters = Dict(dict={
 
