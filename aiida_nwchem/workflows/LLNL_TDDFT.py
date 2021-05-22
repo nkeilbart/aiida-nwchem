@@ -126,7 +126,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         metadata = {
             'options' : {
                 'resources' : {
-                    'num_machines' : 1
+                    'num_machines' : 10
                 },
                 'max_wallclock_seconds' : 30*60,
                 'queue_name' : 'pbatch',
