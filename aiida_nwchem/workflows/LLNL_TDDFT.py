@@ -4,6 +4,7 @@ from aiida.engine import submit, WorkChain, ToContext, if_, while_, append_
 from aiida.common import AttributeDict
 
 import numpy as np
+import copy
 
 NwchemCalculation = CalculationFactory('nwchem.nwchem')
 
@@ -137,7 +138,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
 
         # Setup caged parameters
         builder.cage.code = code
-        builder.cage.metadata = metadata.copy()
+        builder.cage.metadata = copy.deepcopy(metadata)
         builder.cage.metadata['call_link_label'] = 'cage'
         builder.cage.parameters = Dict(dict={
 
@@ -165,7 +166,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         })
 
         builder.ligand.code = code
-        builder.ligand.metadata = metadata.copy()
+        builder.ligand.metadata = copy.deepcopy(metadata)
         builder.ligand.metadata['call_link_label'] = 'ligand'
         builder.ligand.parameters = Dict(dict={
             'basis spherical':{
@@ -188,7 +189,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         
         # Setup full calculation information
         builder.full.code = code
-        builder.full.metadata = metadata.copy()
+        builder.full.metadata = copy.deepcopy(metadata)
         builder.full.metadata['call_link_label'] = 'full'
         builder.full.structure = structure
         builder.full.parameters = Dict(dict={
@@ -211,7 +212,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
            
         # Setup full calculation with UHF
         builder.uhf.code = code
-        builder.uhf.metadata = metadata.copy()
+        builder.uhf.metadata = copy.deepcopy(metadata)
         builder.uhf.metadata['call_link_label'] = 'uhf'
         builder.uhf.structure = structure
         builder.uhf.parameters = Dict(dict={
@@ -226,7 +227,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         
         # DFT parameters
         builder.dft.code = code
-        builder.dft.metadata = metadata.copy()
+        builder.dft.metadata = copy.deepcopy(metadata)
         builder.dft.metadata['call_link_label'] = 'dft'
         builder.dft.metadata['options']['resources']['num_machines'] = 4
         builder.dft.metadata['options']['max_wallclock_seconds'] = 60*60
@@ -254,7 +255,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
 
         # TDDFT parameters
         builder.tddft.code = code
-        builder.tddft.metadata = metadata.copy()
+        builder.tddft.metadata = copy.deepcopy(metadata)
         builder.tddft.metadata['call_link_label'] = 'tddft'
         builder.tddft.metadata['options']['resources']['num_machines'] = 4
         builder.tddft.metadata['options']['max_wallclock_seconds'] = 2*60*60
