@@ -64,6 +64,8 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         spec.expose_outputs(NwchemCalculation)
         spec.exit_code(401, 'NO_CHARGE_SPECIFIED',
             message='must specify a charge for the builder')
+        spec.exit_code(410, 'NO_SPIN_MULT',
+            message='must specify a spin multiplicity for the builder')
         spec.exit_code(402, 'NO_ATOM_FOUND',
             message='no atoms found when parsing structure for elements other than "H" and "O"')
         spec.exit_code(403, 'TOO_MANY_ATOMS_FOUND',
@@ -83,11 +85,21 @@ class LLNLSpectroscopyWorkChain(WorkChain):
 
     @classmethod
     def get_builder_from_protocol(
-        cls, code, structure, charge=None, cage_style='octahedra', overrides=None, **kwargs
+        cls, code, structure, charge=None, spin_mult=None, 
+        cage_style='octahedra', overrides=None, **kwargs
     ):
 
         if charge == None:
             return cls.exit_codes.NO_CHARGE_SPECIFIED
+        if spin_mult == None:
+            return cls.exit_codes.NO_SPIN_MULT
+
+        # spin_mult = 2 * (# of unpaired electrons/2) + 1
+        spin_states = { 1 : 'singlet',
+                        2 : 'doublet',
+                        3 : 'triplet' }
+
+        spin_state = spin_states[spin_mult]
 
         args = (code, structure)
 
@@ -127,7 +139,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         metadata = {
             'options' : {
                 'resources' : {
-                    'num_machines' : 10
+                    'num_machines' : 1
                 },
                 'max_wallclock_seconds' : 30*60,
                 'queue_name' : 'pbatch',
@@ -157,7 +169,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
             'point_charges' : point_charges,
 
             'scf' : {
-                'triplet':'',
+                spin_state:'',
                 'maxiter' : 100,
                 'vectors' : 'atomic output {0}.movecs'.format(cage_kind.lower())
             },
@@ -203,7 +215,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
              },
             'charge' : charge,
             'scf' : {
-                'triplet':'',
+                spin_state:'',
                 'maxiter' : 100,
                 'vectors' : 'input fragment {0}.movecs ligand.movecs output hf.movecs'.format(cage_kind.lower())
             },
@@ -219,7 +231,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
             'restart' : True,
             'scf' : {
                 'vectors' : 'input hf.movecs output uhf.movecs',
-                'triplet; uhf' : '',
+                '{0}; uhf'.format(spin_state) : '',
                 'maxiter' : 100
             },
             'task' : 'scf energy'
@@ -247,7 +259,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
                 'cam 0.33 cam_alpha 0.0 cam_beta 1.0' : '',
                 'direct' : '',
                 'vectors' : 'input uhf.movecs output dft.movecs',
-                'mult' : 3,
+                'mult' : spin_mult,
                 'mulliken' : ''
             },
             'task' : 'dft energy'
@@ -268,7 +280,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
                 'cam 0.33 cam_alpha 0.0 cam_beta 1.0' : '',
                 'direct' : '',
                 'vectors' : 'input uhf.movecs output dft.movecs',
-                'mult' : 3,
+                'mult' : spin_mult,
                 'mulliken' : ''
             },
             'tddft' : {
