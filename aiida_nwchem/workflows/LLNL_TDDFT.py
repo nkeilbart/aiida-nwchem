@@ -279,7 +279,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
                 'xc' : 'xbnl07 0.90 lyp 1.00 hfexch 1.00',
                 'cam 0.33 cam_alpha 0.0 cam_beta 1.0' : '',
                 'direct' : '',
-                'vectors' : 'input uhf.movecs output dft.movecs',
+                'vectors' : 'input dft.movecs',
                 'mult' : spin_mult,
                 'mulliken' : ''
             },
