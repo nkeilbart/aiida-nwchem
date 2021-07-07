@@ -28,16 +28,22 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         """
         super().define(spec)
         spec.expose_inputs(NwchemCalculation, namespace = 'cage',
+            exclude=('clean_workdir'),
             namespace_options={'help': 'Inputs from the NwchemCalculation for cage calculation.'})
         spec.expose_inputs(NwchemCalculation, namespace = 'ligand',
+            exclude=('clean_workdir'),
             namespace_options={'help': 'Inputs from the NwchemCalculation for ligand only calculation.'})
         spec.expose_inputs(NwchemCalculation, namespace = 'full',
+            exclude=('clean_workdir'),
             namespace_options={'help': 'Inputs from the NwchemCalculation for combined cage and ligand calculation.'})
         spec.expose_inputs(NwchemCalculation, namespace = 'uhf',
+            exclude=('clean_workdir'),
             namespace_options={'help': 'Inputs from the NwchemCalculation for full with UHF settings.'})
         spec.expose_inputs(NwchemCalculation, namespace = 'dft',
+            exclude=('clean_workdir'),
             namespace_options={'help': 'Inputs from the NwchemCalculation for dft calculation.'})
         spec.expose_inputs(NwchemCalculation, namespace = 'tddft',
+            exclude=('clean_workdir'),
             namespace_options={'help': 'Inputs from the NwchemCalculation for tddft calculation.'})
         spec.input('clean_workdir', valid_type=orm.Bool, default=lambda: orm.Bool(False),
             help='If `True`, work directories of all calculations are deleted at end of workflow.')
@@ -68,6 +74,8 @@ class LLNLSpectroscopyWorkChain(WorkChain):
             message='must specify a charge for the builder')
         spec.exit_code(410, 'NO_SPIN_MULT',
             message='must specify a spin multiplicity for the builder')
+        spec.exit_code(410, 'CLEAN_WORKDIR_NOT_BOOL',
+            message='clean_workdir must be `True` or False`')
         spec.exit_code(402, 'NO_ATOM_FOUND',
             message='no atoms found when parsing structure for elements other than "H" and "O"')
         spec.exit_code(403, 'TOO_MANY_ATOMS_FOUND',
@@ -88,13 +96,16 @@ class LLNLSpectroscopyWorkChain(WorkChain):
     @classmethod
     def get_builder_from_protocol(
         cls, code, structure, charge=None, spin_mult=None, 
-        cage_style='octahedra', overrides=None, **kwargs
+        cage_style='octahedra', overrides=None, 
+        clean_workdir=False, **kwargs
     ):
 
         if charge == None:
             return cls.exit_codes.NO_CHARGE_SPECIFIED
         if spin_mult == None:
             return cls.exit_codes.NO_SPIN_MULT
+        if type(clean_workdir) != bool:
+            return cls.exit_codes.CLEAN_WORKDIR_NOT_BOOL
 
         # spin_mult = 2 * (# of unpaired electrons/2) + 1
         spin_states = { 1 : 'singlet',
@@ -295,6 +306,8 @@ class LLNLSpectroscopyWorkChain(WorkChain):
             'task' : 'tddft energy'
         })   
 
+        builder.clean_workdir = orm.Bool(clean_workdir)
+
         return builder
 
     def get_cage_charge(charge,cage_style):
@@ -460,6 +473,29 @@ class LLNLSpectroscopyWorkChain(WorkChain):
             self.report(f'workchain finished')
 
         self.out_many(self.exposed_outputs(calculation, NwchemCalculation))
+
+    def on_terminated(self):
+        """
+        Clean working directories from workflow if `clean_workdir=True`.
+        """
+        super().on_terminated()
+
+        if self.inputs.clean_workdir.value is False:
+            self.report('Remote folders will not be deleted.')
+            return
+
+        cleaned_calcs = []
+
+        for called_descendant in self.node.called_descendants:
+            if isinstance(called_descendant, orm.CalcJobNode):
+                try:
+                    called_descendant.outputs.remove_folder._clean()  # pylint: disable=protected-access
+                    cleaned_calcs.append(called_descendant.pk)
+                except (IOError, OSError, KeyError):
+                    pass
+
+        if cleaned_calcs:
+            self.report(f"Cleaned remote folders of calculations: {' '.join(map(str, cleaned_calcs))}")
 
     def cu_basis():
         basis = '''   S
