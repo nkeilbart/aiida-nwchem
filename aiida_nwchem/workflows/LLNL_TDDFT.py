@@ -39,6 +39,8 @@ class LLNLSpectroscopyWorkChain(WorkChain):
             namespace_options={'help': 'Inputs from the NwchemCalculation for dft calculation.'})
         spec.expose_inputs(NwchemCalculation, namespace = 'tddft',
             namespace_options={'help': 'Inputs from the NwchemCalculation for tddft calculation.'})
+        spec.input('clean_workdir', valid_type=orm.Bool, default=lambda: orm.Bool(False),
+            help='If `True`, work directories of all calculations are deleted at end of workflow.')
 
         spec.outline(
             cls.run_cage,
