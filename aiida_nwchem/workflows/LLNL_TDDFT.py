@@ -155,7 +155,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
                     'num_machines' : 1
                 },
                 'max_wallclock_seconds' : 30*60,
-                'queue_name' : 'pdebug',
+                'queue_name' : 'pbatch',
                 'account' : 'corrctl'
             }
         }
@@ -283,7 +283,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         builder.tddft.metadata = copy.deepcopy(metadata)
         builder.tddft.metadata['call_link_label'] = 'tddft'
         builder.tddft.metadata['options']['resources']['num_machines'] = 4
-        builder.tddft.metadata['options']['max_wallclock_seconds'] = 60*60
+        builder.tddft.metadata['options']['max_wallclock_seconds'] = 2*60*60
         builder.tddft.structure = structure
         builder.tddft.parameters = Dict(dict={
             'restart' : True,
