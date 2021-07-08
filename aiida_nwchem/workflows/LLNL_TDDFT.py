@@ -155,7 +155,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
                     'num_machines' : 1
                 },
                 'max_wallclock_seconds' : 30*60,
-                'queue_name' : 'pbatch',
+                'queue_name' : 'pdebug',
                 'account' : 'corrctl'
             }
         }
@@ -283,7 +283,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         builder.tddft.metadata = copy.deepcopy(metadata)
         builder.tddft.metadata['call_link_label'] = 'tddft'
         builder.tddft.metadata['options']['resources']['num_machines'] = 4
-        builder.tddft.metadata['options']['max_wallclock_seconds'] = 2*60*60
+        builder.tddft.metadata['options']['max_wallclock_seconds'] = 60*60
         builder.tddft.structure = structure
         builder.tddft.parameters = Dict(dict={
             'restart' : True,
@@ -481,7 +481,7 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         super().on_terminated()
 
         if self.inputs.clean_workdir.value is False:
-            self.report('Remote folders will not be deleted.')
+            self.report('remote folders will not be cleaned')
             return
 
         cleaned_calcs = []
@@ -489,13 +489,13 @@ class LLNLSpectroscopyWorkChain(WorkChain):
         for called_descendant in self.node.called_descendants:
             if isinstance(called_descendant, orm.CalcJobNode):
                 try:
-                    called_descendant.outputs.remove_folder._clean()  # pylint: disable=protected-access
+                    called_descendant.outputs.remote_folder._clean()  # pylint: disable=protected-access
                     cleaned_calcs.append(called_descendant.pk)
                 except (IOError, OSError, KeyError):
                     pass
 
         if cleaned_calcs:
-            self.report(f"Cleaned remote folders of calculations: {' '.join(map(str, cleaned_calcs))}")
+            self.report(f"cleaned remote folders of calculations: {' '.join(map(str, cleaned_calcs))}")
 
     def cu_basis():
         basis = '''   S
